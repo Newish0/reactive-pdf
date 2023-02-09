@@ -10,14 +10,11 @@ import FileUpload from "./components/FileUpload";
 
 import testPDF from "./test/1.pdf";
 
-import { Draggable } from "react-drag-reorder";
-
+import Reorder, { reorder, reorderImmutable, reorderFromTo, reorderFromToImmutable } from "react-reorder";
 
 function App() {
     const [files, setFiles] = useState([]);
-    const [pageThumbnailSources, setPageThumbnailSources] = useState<
-        Array<string>
-    >([]);
+    const [pageThumbnailSources, setPageThumbnailSources] = useState<Array<string>>([]);
 
     const handleFileUpload = (files: FileList) => {
         console.log(files[0]);
@@ -43,10 +40,7 @@ function App() {
                         const thumbSrc = await PDFThumb.create(page);
 
                         if (thumbSrc)
-                            setPageThumbnailSources((pageThumbnailSources) => [
-                                ...pageThumbnailSources,
-                                thumbSrc,
-                            ]);
+                            setPageThumbnailSources((pageThumbnailSources) => [...pageThumbnailSources, thumbSrc]);
                     }
                 })();
             }
@@ -61,8 +55,7 @@ function App() {
     return (
         <div className="App">
             <div className="free-grid">
-
-                // TODO: USE https://github.com/JakeSidSmith/react-reorder
+                {/* TODO: USE https://github.com/JakeSidSmith/react-reorder */}
                 {pageThumbnailSources.map((src, i) => (
                     <div key={`page-thumb-${i}`}>
                         <img src={src} />
@@ -73,6 +66,37 @@ function App() {
                 <FileUpload onChange={handleFileUpload} />
             </div>
 
+            <Reorder
+                reorderId="my-list" // Unique ID that is used internally to track this list (required)
+                reorderGroup="reorder-group" // A group ID that allows items to be dragged between lists of the same group (optional)
+                component="ul" // Tag name or Component to be used for the wrapping element (optional), defaults to 'div'
+                placeholderClassName="placeholder" // Class name to be applied to placeholder elements (optional), defaults to 'placeholder'
+                draggedClassName="dragged" // Class name to be applied to dragged elements (optional), defaults to 'dragged'
+                lock="horizontal" // Lock the dragging direction (optional): vertical, horizontal (do not use with groups)
+                holdTime={500} // Default hold time before dragging begins (mouse & touch) (optional), defaults to 0
+                touchHoldTime={500} // Hold time before dragging begins on touch devices (optional), defaults to holdTime
+                mouseHoldTime={200} // Hold time before dragging begins with mouse (optional), defaults to holdTime
+                onReorder={() => {}} // Callback when an item is dropped (you will need this to update your state)
+                autoScroll={true} // Enable auto-scrolling when the pointer is close to the edge of the Reorder component (optional), defaults to true
+                disabled={false} // Disable reordering (optional), defaults to false
+                disableContextMenus={true} // Disable context menus when holding on touch devices (optional), defaults to true
+                placeholder={
+                    <div className="custom-placeholder" /> // Custom placeholder element (optional), defaults to clone of dragged element
+                }
+            >
+                {
+                    // ["a", "b", "c"].map((item) => <li key={item}>{item}</li>).toArray()
+                    ["a", "b", "c"].map((item) => (
+                        <li key={item}>{item}</li>
+                    ))
+                    /*
+                Note this example is an ImmutableJS List so we must convert it to an array.
+                I've left this up to you to covert to an array, as react-reorder updates a lot,
+                and if I called this internally it could get rather slow,
+                whereas you have greater control over your component updates.
+                */
+                }
+            </Reorder>
         </div>
     );
 }
