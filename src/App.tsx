@@ -10,15 +10,14 @@ import FileUpload from "./components/FileUpload";
 
 import testPDF from "./test/1.pdf";
 
-const BASE64_MARKER = ";base64,";
+import { Draggable } from "react-drag-reorder";
+import Drag from "./components/Drag";
 
 function App() {
     const [files, setFiles] = useState([]);
     const [pageThumbnailSources, setPageThumbnailSources] = useState<
         Array<string>
     >([]);
-
-    const tmpCanvasRef = createRef<HTMLCanvasElement>();
 
     const handleFileUpload = (files: FileList) => {
         console.log(files[0]);
@@ -61,8 +60,7 @@ function App() {
 
     return (
         <div className="App">
-            
-            <div className="free-grid">
+            {/* <div className="free-grid">
                 {pageThumbnailSources.map((src, i) => (
                     <div key={`page-thumb-${i}`}>
                         <img src={src} />
@@ -71,8 +69,23 @@ function App() {
                 ))}
 
                 <FileUpload onChange={handleFileUpload} />
+            </div> */}
+
+            <div className="free-grid">
+                // FIXME: MUST FORCE RERENDER FOR DRAGGABLE???
+                <Draggable>
+                    {["a", "b"].map((word, idx) => {
+                        return (
+                            <div key={idx} className="flex-item">
+                                {word}
+                            </div>
+                        );
+                    })}
+                </Draggable>
             </div>
-            <canvas ref={tmpCanvasRef}></canvas>
+            <FileUpload onChange={handleFileUpload} />
+            
+            {/* <Drag></Drag> */}
         </div>
     );
 }
