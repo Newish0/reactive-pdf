@@ -11,7 +11,7 @@ import FileUpload from "./components/FileUpload";
 import testPDF from "./test/1.pdf";
 
 import { Draggable } from "react-drag-reorder";
-import Drag from "./components/Drag";
+
 
 function App() {
     const [files, setFiles] = useState([]);
@@ -60,7 +60,9 @@ function App() {
 
     return (
         <div className="App">
-            {/* <div className="free-grid">
+            <div className="free-grid">
+
+                // TODO: USE https://github.com/JakeSidSmith/react-reorder
                 {pageThumbnailSources.map((src, i) => (
                     <div key={`page-thumb-${i}`}>
                         <img src={src} />
@@ -69,23 +71,8 @@ function App() {
                 ))}
 
                 <FileUpload onChange={handleFileUpload} />
-            </div> */}
-
-            <div className="free-grid">
-                // FIXME: MUST FORCE RERENDER FOR DRAGGABLE???
-                <Draggable>
-                    {["a", "b"].map((word, idx) => {
-                        return (
-                            <div key={idx} className="flex-item">
-                                {word}
-                            </div>
-                        );
-                    })}
-                </Draggable>
             </div>
-            <FileUpload onChange={handleFileUpload} />
-            
-            {/* <Drag></Drag> */}
+
         </div>
     );
 }
