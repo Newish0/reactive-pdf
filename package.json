@@ -14,8 +14,9 @@
     "pdfjs-dist": "^3.3.122",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "react-icons": "^4.7.1",
-    "react-reorder": "^3.0.0-alpha.7"
+    "react-gesture-responder": "^2.1.0",
+    "react-grid-dnd": "^2.1.2",
+    "react-icons": "^4.7.1"
   },
   "devDependencies": {
     "@types/react": "^18.0.27",
@@ -23,5 +24,9 @@
     "@vitejs/plugin-react-swc": "^3.0.0",
     "typescript": "^4.9.3",
     "vite": "^4.1.0"
-  }
+  },
+  "main": "index.js",
+  "repository": "https://github.com/Newish0/react-pdf-tool-app.git",
+  "author": "Newish0 <80089521+Newish0@users.noreply.github.com>",
+  "license": "MIT"
 }

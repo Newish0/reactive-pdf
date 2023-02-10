@@ -1,12 +1,9 @@
 #root {
-    max-width: 1280px;
-    margin: 0 auto;
     padding: 2rem;
-    text-align: center;
 }
 
 .free-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, clamp(128px, 1fr, 256px));
+    grid-template-columns: repeat(auto-fill, minmax(128px, 1fr));
     gap: 16px;
 }

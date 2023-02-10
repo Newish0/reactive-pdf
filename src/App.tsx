@@ -1,23 +1,30 @@
 import { createRef, useState } from "react";
-import reactLogo from "./assets/react.svg";
+
 import "./App.css";
 import "@picocss/pico";
 
 import * as pdfjsLib from "pdfjs-dist";
+import { degrees, PDFDocument, PDFPage, rgb, StandardFonts } from "pdf-lib";
+
 import { PDFThumb } from "./util/PDFHelpers";
 
 import FileUpload from "./components/FileUpload";
 
-import testPDF from "./test/1.pdf";
+import ArrangeablePage from "./components/ArrangeablePage";
 
-import Reorder, { reorder, reorderImmutable, reorderFromTo, reorderFromToImmutable } from "react-reorder";
+interface PDFPageData {
+    src: string;
+    file: File;
+    pdfData: ArrayBuffer | string;
+    pageNumber: number;
+}
 
 function App() {
-    const [files, setFiles] = useState([]);
-    const [pageThumbnailSources, setPageThumbnailSources] = useState<Array<string>>([]);
+    const [pages, setPages] = useState<Array<PDFPageData>>([]);
 
     const handleFileUpload = (files: FileList) => {
-        console.log(files[0]);
+        const file = files[0];
+        console.debug(file);
 
         const reader = new FileReader();
         reader.onload = (e) => {
@@ -40,63 +47,104 @@ function App() {
                         const thumbSrc = await PDFThumb.create(page);
 
                         if (thumbSrc)
-                            setPageThumbnailSources((pageThumbnailSources) => [...pageThumbnailSources, thumbSrc]);
+                            setPages((pages) => [
+                                ...pages,
+                                {
+                                    src: thumbSrc,
+                                    file,
+                                    pdfData,
+                                    pageNumber: i,
+                                },
+                            ]);
                     }
                 })();
             }
         };
-        reader.readAsDataURL(files[0]);
+        reader.readAsDataURL(file);
 
         // pdfjsLib.getDocument(testPDF);
     };
 
-    console.log(pageThumbnailSources);
+    const swapPage = (a: number, b: number) => {
+        let pagesNewState = [...pages];
+        let tmp = pagesNewState[a];
+        pagesNewState[a] = pagesNewState[b];
+        pagesNewState[b] = tmp;
+
+        setPages(pagesNewState);
+    };
+
+    const processPages = async () => {
+        const pdfPagesMap = new Map<File, PDFPage[]>();
+
+        const newPdfDoc = await PDFDocument.create();
+
+        console.debug("PAGES TO PROCESS", pages);
+
+        for (const page of pages) {
+            const { file, pdfData, pageNumber } = page;
+
+            if (!pdfPagesMap.has(file)) {
+                const pdfDoc = await PDFDocument.load(pdfData);
+                const indices = pdfDoc.getPageIndices();
+                const pdfPages = await newPdfDoc.copyPages(pdfDoc, indices);
+
+                pdfPagesMap.set(file, pdfPages);
+            }
+
+            const curPages = pdfPagesMap.get(file);
+
+            if (!curPages) throw new Error("PDF Pages not found in map.");
+
+            newPdfDoc.addPage(curPages[pageNumber - 1]);
+        }
+
+        const newPdfBytes = await newPdfDoc.save();
+
+        var blob = new Blob([newPdfBytes], { type: "application/pdf" });
+        var link = document.createElement("a");
+        link.href = window.URL.createObjectURL(blob);
+        var fileName = "merged.pdf";
+        link.download = fileName;
+        link.click();
+    };
 
     return (
         <div className="App">
-            <div className="free-grid">
-                {/* TODO: USE https://github.com/JakeSidSmith/react-reorder */}
-                {pageThumbnailSources.map((src, i) => (
-                    <div key={`page-thumb-${i}`}>
-                        <img src={src} />
-                        <div>{i + 1}</div>
-                    </div>
-                ))}
+            <header>
+                <div className="container">
+                    <h1>Reactive PDF Tool</h1>
+                </div>
+            </header>
 
-                <FileUpload onChange={handleFileUpload} />
-            </div>
+            <main className="container">
+                <div className="free-grid">
+                    {pages.map((p, i) => (
+                        <ArrangeablePage
+                            thumbnail={p.src}
+                            index={i}
+                            onClickLeft={(oldIndex) => {
+                                swapPage(
+                                    oldIndex,
+                                    oldIndex - 1 >= 0 ? oldIndex - 1 : oldIndex
+                                );
+                            }}
+                            onClickRight={(oldIndex) => {
+                                swapPage(
+                                    oldIndex,
+                                    oldIndex + 1 < pages.length
+                                        ? oldIndex + 1
+                                        : oldIndex
+                                );
+                            }}
+                        ></ArrangeablePage>
+                    ))}
 
-            <Reorder
-                reorderId="my-list" // Unique ID that is used internally to track this list (required)
-                reorderGroup="reorder-group" // A group ID that allows items to be dragged between lists of the same group (optional)
-                component="ul" // Tag name or Component to be used for the wrapping element (optional), defaults to 'div'
-                placeholderClassName="placeholder" // Class name to be applied to placeholder elements (optional), defaults to 'placeholder'
-                draggedClassName="dragged" // Class name to be applied to dragged elements (optional), defaults to 'dragged'
-                lock="horizontal" // Lock the dragging direction (optional): vertical, horizontal (do not use with groups)
-                holdTime={500} // Default hold time before dragging begins (mouse & touch) (optional), defaults to 0
-                touchHoldTime={500} // Hold time before dragging begins on touch devices (optional), defaults to holdTime
-                mouseHoldTime={200} // Hold time before dragging begins with mouse (optional), defaults to holdTime
-                onReorder={() => {}} // Callback when an item is dropped (you will need this to update your state)
-                autoScroll={true} // Enable auto-scrolling when the pointer is close to the edge of the Reorder component (optional), defaults to true
-                disabled={false} // Disable reordering (optional), defaults to false
-                disableContextMenus={true} // Disable context menus when holding on touch devices (optional), defaults to true
-                placeholder={
-                    <div className="custom-placeholder" /> // Custom placeholder element (optional), defaults to clone of dragged element
-                }
-            >
-                {
-                    // ["a", "b", "c"].map((item) => <li key={item}>{item}</li>).toArray()
-                    ["a", "b", "c"].map((item) => (
-                        <li key={item}>{item}</li>
-                    ))
-                    /*
-                Note this example is an ImmutableJS List so we must convert it to an array.
-                I've left this up to you to covert to an array, as react-reorder updates a lot,
-                and if I called this internally it could get rather slow,
-                whereas you have greater control over your component updates.
-                */
-                }
-            </Reorder>
+                    <FileUpload onChange={handleFileUpload} />
+                </div>
+                <br />
+                <button onClick={processPages}>Process</button>
+            </main>
         </div>
     );
 }
