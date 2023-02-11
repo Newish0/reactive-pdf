@@ -2,10 +2,14 @@ import { FaPlus } from "react-icons/fa";
 
 interface FileUploadProps {
     onChange: (files: FileList) => void;
+    accept?: string;
+    clearFileOnUpload?: boolean;
 }
 
 export default function FileUpload({
     onChange: changeHandler,
+    accept,
+    clearFileOnUpload,
 }: FileUploadProps) {
     return (
         <div
@@ -17,10 +21,12 @@ export default function FileUpload({
                 maxWidth: "100%",
                 border: "5px dashed var(--primary)",
             }}
+            data-tooltip="Click or drop to add file"
         >
             <input
                 type="file"
                 name="file"
+                accept={accept ?? ""}
                 style={{
                     height: "100%",
                     margin: 0,
@@ -29,7 +35,9 @@ export default function FileUpload({
                 }}
                 onChange={(evt) => {
                     changeHandler(evt.target.files as FileList);
+                    if (clearFileOnUpload) evt.target.value = "";
                 }}
+                title="Click or drop to add file"
             />
 
             <div

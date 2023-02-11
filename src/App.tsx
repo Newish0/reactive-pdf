@@ -1,4 +1,4 @@
-import { createRef, useState } from "react";
+import { createRef, useEffect, useRef, useState } from "react";
 
 import "./App.css";
 import "@picocss/pico";
@@ -12,6 +12,8 @@ import FileUpload from "./components/FileUpload";
 
 import ArrangeablePage from "./components/ArrangeablePage";
 
+import { v4 as uuidv4 } from "uuid";
+
 import {
     GridContextProvider,
     GridDropZone,
@@ -24,6 +26,7 @@ interface PDFPageData {
     file: File;
     pdfData: ArrayBuffer | string;
     pageNumber: number;
+    id: string;
 }
 
 function App() {
@@ -31,12 +34,14 @@ function App() {
 
     const handleFileUpload = (files: FileList) => {
         const file = files[0];
-        console.debug(file);
+
+        if (!file) return;
 
         const reader = new FileReader();
         reader.onload = (e) => {
             if (e?.target?.result) {
                 const pdfData = e?.target?.result;
+                const pdfId = uuidv4();
 
                 // FIXME: service worker may mismatch version since from different source
                 pdfjsLib.GlobalWorkerOptions.workerSrc =
@@ -46,11 +51,8 @@ function App() {
                 (async function () {
                     const pdf = await loadingTask.promise;
 
-                    // Fetch the first page.
-
                     for (let i = 1; i <= pdf.numPages; i++) {
                         const page = await pdf.getPage(i);
-
                         const thumbSrc = await PDFThumb.create(page);
 
                         if (thumbSrc)
@@ -61,6 +63,7 @@ function App() {
                                     file,
                                     pdfData,
                                     pageNumber: i,
+                                    id: pdfId,
                                 },
                             ]);
                     }
@@ -68,25 +71,10 @@ function App() {
             }
         };
         reader.readAsDataURL(file);
-
-        // pdfjsLib.getDocument(testPDF);
-    };
-
-    const swapPage = (a: number, b: number) => {
-        if (a < 0 || a >= pages.length || b < 0 || b >= pages.length)
-            return null;
-
-        let pagesNewState = [...pages];
-        let tmp = pagesNewState[a];
-        pagesNewState[a] = pagesNewState[b];
-        pagesNewState[b] = tmp;
-
-        setPages(pagesNewState);
     };
 
     const processPages = async () => {
         const pdfPagesMap = new Map<File, PDFPage[]>();
-
         const newPdfDoc = await PDFDocument.create();
 
         console.debug("PAGES TO PROCESS", pages);
@@ -119,25 +107,22 @@ function App() {
         link.click();
     };
 
-    const [items, setItems] = useState<string[]>([
-        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-        "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
-        "c",
-        "d",
-        "e",
-        "f",
-    ]);
-
-    function onChange(
+    const onChange = (
         sourceId: string,
         sourceIndex: number,
         targetIndex: number
-    ) {
+    ) => {
+        if (sourceIndex >= pages.length || targetIndex >= pages.length) return;
         let swappedPages = swap(pages, sourceIndex, targetIndex);
         setPages(swappedPages);
-    }
+    };
 
     const dndRowHeight = 192;
+    const dndColWidth = 192;
+    const dndNumRow = Math.floor(
+        Math.min(window.innerWidth, 1140) / dndColWidth
+    );
+    const dndMargin = 48;
 
     return (
         <div className="App">
@@ -147,51 +132,50 @@ function App() {
                 </div>
             </header>
 
-            <main>
+            <main className="container">
                 <GridContextProvider onChange={onChange}>
                     <div className="container">
                         <GridDropZone
                             id="pages"
-                            boxesPerRow={4}
-                            rowHeight={dndRowHeight + 48}
+                            boxesPerRow={dndNumRow}
+                            rowHeight={dndRowHeight + dndMargin}
                             style={{
                                 height: Math.max(
-                                    dndRowHeight + 48,
-                                    Math.ceil((pages.length + 1) / 4) *
-                                        (dndRowHeight + 48)
+                                    dndRowHeight + dndMargin,
+                                    Math.ceil((pages.length + 1) / dndNumRow) *
+                                        (dndRowHeight + dndMargin)
                                 ),
                             }}
                         >
                             {pages.map((p, i) => (
-                                <GridItem key={`item-${i}`}>
+                                <GridItem
+                                    key={`item-${i}-${p.id}-${p.pageNumber}`}
+                                >
                                     <div
                                         style={{
                                             height: dndRowHeight,
-                                            textAlign: "center",
+                                            maxWidth: dndColWidth,
+                                            marginInline: "8px",
+                                            backgroundImage: `url(${p.src})`,
+                                            backgroundSize: "contain",
+                                            backgroundPosition: "top center",
                                         }}
-                                    >
-                                        <div
-                                            style={{
-                                                height: "100%",
-                                                backgroundImage: `url(${p.src})`,
-                                                backgroundSize: "contain",
-                                                backgroundPosition: "center",
-                                            }}
-                                        >
-                                            {p.pageNumber}
-                                        </div>
-                                    </div>
+                                    ></div>
                                 </GridItem>
                             ))}
 
-                            <GridItem>
+                            <GridItem draggable="false">
                                 <div
                                     style={{
                                         height: dndRowHeight,
                                         textAlign: "center",
                                     }}
                                 >
-                                    <FileUpload onChange={handleFileUpload} />
+                                    <FileUpload
+                                        accept=".pdf"
+                                        onChange={handleFileUpload}
+                                        clearFileOnUpload={true}
+                                    />
                                 </div>
                             </GridItem>
                         </GridDropZone>
@@ -201,21 +185,6 @@ function App() {
                 <br />
                 <button onClick={processPages}>Process</button>
             </main>
-
-            {/* <GridContextProvider onChange={onChange}>
-                <GridDropZone
-                    id="items"
-                    boxesPerRow={4}
-                    rowHeight={280}
-                    style={{ height: 280 }}
-                >
-                    {items.map((item: string) => (
-                        <GridItem key={item}>
-                            <div>{item}</div>
-                        </GridItem>
-                    ))}
-                </GridDropZone>
-            </GridContextProvider> */}
         </div>
     );
 }
