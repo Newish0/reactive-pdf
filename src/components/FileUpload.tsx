@@ -12,7 +12,9 @@ export default function FileUpload({
             style={{
                 position: "relative",
                 aspectRatio: "8.5/11",
-                width: "100%",
+                margin: "auto",
+                maxHeight: "100%",
+                maxWidth: "100%",
                 border: "5px dashed var(--primary)",
             }}
         >

@@ -12,6 +12,13 @@ import FileUpload from "./components/FileUpload";
 
 import ArrangeablePage from "./components/ArrangeablePage";
 
+import {
+    GridContextProvider,
+    GridDropZone,
+    GridItem,
+    swap,
+} from "react-grid-dnd";
+
 interface PDFPageData {
     src: string;
     file: File;
@@ -66,6 +73,9 @@ function App() {
     };
 
     const swapPage = (a: number, b: number) => {
+        if (a < 0 || a >= pages.length || b < 0 || b >= pages.length)
+            return null;
+
         let pagesNewState = [...pages];
         let tmp = pagesNewState[a];
         pagesNewState[a] = pagesNewState[b];
@@ -109,6 +119,26 @@ function App() {
         link.click();
     };
 
+    const [items, setItems] = useState<string[]>([
+        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "c",
+        "d",
+        "e",
+        "f",
+    ]);
+
+    function onChange(
+        sourceId: string,
+        sourceIndex: number,
+        targetIndex: number
+    ) {
+        let swappedPages = swap(pages, sourceIndex, targetIndex);
+        setPages(swappedPages);
+    }
+
+    const dndRowHeight = 192;
+
     return (
         <div className="App">
             <header>
@@ -117,34 +147,75 @@ function App() {
                 </div>
             </header>
 
-            <main className="container">
-                <div className="free-grid">
-                    {pages.map((p, i) => (
-                        <ArrangeablePage
-                            thumbnail={p.src}
-                            index={i}
-                            onClickLeft={(oldIndex) => {
-                                swapPage(
-                                    oldIndex,
-                                    oldIndex - 1 >= 0 ? oldIndex - 1 : oldIndex
-                                );
+            <main>
+                <GridContextProvider onChange={onChange}>
+                    <div className="container">
+                        <GridDropZone
+                            id="pages"
+                            boxesPerRow={4}
+                            rowHeight={dndRowHeight + 48}
+                            style={{
+                                height: Math.max(
+                                    dndRowHeight + 48,
+                                    Math.ceil((pages.length + 1) / 4) *
+                                        (dndRowHeight + 48)
+                                ),
                             }}
-                            onClickRight={(oldIndex) => {
-                                swapPage(
-                                    oldIndex,
-                                    oldIndex + 1 < pages.length
-                                        ? oldIndex + 1
-                                        : oldIndex
-                                );
-                            }}
-                        ></ArrangeablePage>
-                    ))}
+                        >
+                            {pages.map((p, i) => (
+                                <GridItem key={`item-${i}`}>
+                                    <div
+                                        style={{
+                                            height: dndRowHeight,
+                                            textAlign: "center",
+                                        }}
+                                    >
+                                        <div
+                                            style={{
+                                                height: "100%",
+                                                backgroundImage: `url(${p.src})`,
+                                                backgroundSize: "contain",
+                                                backgroundPosition: "center",
+                                            }}
+                                        >
+                                            {p.pageNumber}
+                                        </div>
+                                    </div>
+                                </GridItem>
+                            ))}
 
-                    <FileUpload onChange={handleFileUpload} />
-                </div>
+                            <GridItem>
+                                <div
+                                    style={{
+                                        height: dndRowHeight,
+                                        textAlign: "center",
+                                    }}
+                                >
+                                    <FileUpload onChange={handleFileUpload} />
+                                </div>
+                            </GridItem>
+                        </GridDropZone>
+                    </div>
+                </GridContextProvider>
+
                 <br />
                 <button onClick={processPages}>Process</button>
             </main>
+
+            {/* <GridContextProvider onChange={onChange}>
+                <GridDropZone
+                    id="items"
+                    boxesPerRow={4}
+                    rowHeight={280}
+                    style={{ height: 280 }}
+                >
+                    {items.map((item: string) => (
+                        <GridItem key={item}>
+                            <div>{item}</div>
+                        </GridItem>
+                    ))}
+                </GridDropZone>
+            </GridContextProvider> */}
         </div>
     );
 }
