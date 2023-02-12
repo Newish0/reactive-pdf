@@ -4,12 +4,10 @@ import { degrees, PDFDocument, PDFPage, rgb, StandardFonts } from "pdf-lib";
 import * as PDFHelper from "../util/PDFHelper";
 import FileUpload from "./FileUpload";
 import { v4 as uuidv4 } from "uuid";
-import {
-    GridItem,
-    swap,
-} from "react-grid-dnd";
+import { GridItem, swap } from "react-grid-dnd";
 import DynamicGridDnd from "./DynamicGridDnd";
 import DivImg from "./DivImg";
+import { FaTrash } from "react-icons/fa";
 
 interface PDFPageData {
     src: string;
@@ -45,7 +43,9 @@ export default function PDFRearranger() {
                     for (let i = 1; i <= pdf.numPages; i++) {
                         const page = await pdf.getPage(i);
 
-                        const thumbSrc = await PDFHelper.createThumb(page, {scale: 0.32});
+                        const thumbSrc = await PDFHelper.createThumb(page, {
+                            scale: 0.32,
+                        });
 
                         if (thumbSrc)
                             setPages((pages) => [
@@ -66,7 +66,6 @@ export default function PDFRearranger() {
     };
 
     const exportPages = async () => {
-
         setIsExporting(true);
 
         const pdfPagesMap = new Map<File, PDFPage[]>();
@@ -129,6 +128,12 @@ export default function PDFRearranger() {
                             height={dndRowHeight}
                             style={{ marginInline: "8px" }}
                         />
+
+                        <div style={{ position: "absolute", top: 0, right: 0}}>
+                            <small>
+                                {/* // TODO */}
+                            </small>
+                        </div>
                     </GridItem>
                 ))}
 
@@ -150,7 +155,17 @@ export default function PDFRearranger() {
                 defaultValue={outputName}
                 onChange={(evt) => setOutputName(evt.target.value)}
             />
-            {isExporting ? <progress></progress> : <button onClick={exportPages}>Export</button>}
+            {isExporting ? (
+                <button
+                    onClick={exportPages}
+                    aria-busy="true"
+                    className="secondary"
+                >
+                    Exporting...
+                </button>
+            ) : (
+                <button onClick={exportPages}>Export</button>
+            )}
         </React.Fragment>
     );
 }
