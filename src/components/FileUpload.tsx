@@ -1,28 +1,22 @@
+import { CSSProperties } from "react";
 import { FaPlus } from "react-icons/fa";
+import PseudoPage from "./PseudoPage";
 
 interface FileUploadProps {
     onChange: (files: FileList) => void;
     accept?: string;
     clearFileOnUpload?: boolean;
+    style?: CSSProperties;
 }
 
 export default function FileUpload({
     onChange: changeHandler,
     accept,
     clearFileOnUpload,
+    style,
 }: FileUploadProps) {
     return (
-        <div
-            style={{
-                position: "relative",
-                aspectRatio: "8.5/11",
-                margin: "auto",
-                maxHeight: "100%",
-                maxWidth: "100%",
-                border: "5px dashed var(--primary)",
-            }}
-            data-tooltip="Click or drop to add file"
-        >
+        <PseudoPage style={style}>
             <input
                 type="file"
                 name="file"
@@ -39,7 +33,6 @@ export default function FileUpload({
                 }}
                 title="Click or drop to add file"
             />
-
             <div
                 style={{
                     position: "absolute",
@@ -54,6 +47,6 @@ export default function FileUpload({
             >
                 <FaPlus />
             </div>
-        </div>
+        </PseudoPage>
     );
 }

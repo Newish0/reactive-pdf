@@ -7,12 +7,3 @@
     grid-template-columns: repeat(auto-fill, minmax(128px, 1fr));
     gap: 16px;
 }
-
-.selector {
-    user-drag: none;
-    -webkit-user-drag: none;
-    user-select: none;
-    -moz-user-select: none;
-    -webkit-user-select: none;
-    -ms-user-select: none;
-}
