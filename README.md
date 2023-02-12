@@ -1,5 +1,5 @@
 # *Reactive* PDF Tools
 
-A tool build for merging multiple PDFs and rearranging pages!
+A client sided tool build for merging multiple PDFs and rearranging pages!
 
 
