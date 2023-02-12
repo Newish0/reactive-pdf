@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
+    "deploy": "gh-pages -d dist",
     "preview": "vite preview"
   },
   "dependencies": {
@@ -24,6 +25,7 @@
     "@types/react": "^18.0.27",
     "@types/react-dom": "^18.0.10",
     "@vitejs/plugin-react-swc": "^3.0.0",
+    "gh-pages": "^5.0.0",
     "typescript": "^4.9.3",
     "vite": "^4.1.0"
   },
@@ -31,5 +33,5 @@
   "repository": "https://github.com/Newish0/react-pdf-tool-app.git",
   "author": "Newish0 <80089521+Newish0@users.noreply.github.com>",
   "license": "MIT",
-  "homepage": "https://newish0.github.io/reactive-pdf/"
+  "homepage": "https://newish0.github.io/reactive-pdf"
 }
