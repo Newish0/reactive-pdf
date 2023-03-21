@@ -2,7 +2,7 @@ import * as pdfjsLib from "pdfjs-dist";
 import { GetViewportParameters, PDFPageProxy } from "pdfjs-dist/types/src/display/api";
 
 // FIXME: service worker may mismatch version since from different source
-export const PDFJS_WORKER_SRC = "https://cdn.jsdelivr.net/npm/pdfjs-dist@latest/build/pdf.worker.js";
+export const PDFJS_WORKER_SRC = "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.3.122/build/pdf.worker.js";
 
 
 export async function createThumb(page: PDFPageProxy, params: GetViewportParameters = { scale: 1 }) {
