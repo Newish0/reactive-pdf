@@ -1,11 +1,15 @@
 import * as pdfjsLib from "pdfjs-dist";
 import { GetViewportParameters, PDFPageProxy } from "pdfjs-dist/types/src/display/api";
 
+import pdfWorkerUrl from "pdfjs-dist/build/pdf.worker.min.js?url";
+
 // FIXME: service worker may mismatch version since from different source
-export const PDFJS_WORKER_SRC = "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.3.122/build/pdf.worker.js";
+export const PDFJS_WORKER_SRC = pdfWorkerUrl;
 
-
-export async function createThumb(page: PDFPageProxy, params: GetViewportParameters = { scale: 1 }) {
+export async function createThumb(
+    page: PDFPageProxy,
+    params: GetViewportParameters = { scale: 1 }
+) {
     let viewport = page.getViewport(params);
 
     // Support HiDPI-screens.
@@ -20,10 +24,7 @@ export async function createThumb(page: PDFPageProxy, params: GetViewportParamet
     tmpCanvas.style.width = Math.floor(viewport.width) + "px";
     tmpCanvas.style.height = Math.floor(viewport.height) + "px";
 
-    let transform =
-        outputScale !== 1
-            ? [outputScale, 0, 0, outputScale, 0, 0]
-            : undefined;
+    let transform = outputScale !== 1 ? [outputScale, 0, 0, outputScale, 0, 0] : undefined;
 
     if (!context) return null;
 
